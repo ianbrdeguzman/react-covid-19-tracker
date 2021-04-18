@@ -5,10 +5,10 @@ import numeral from 'numeral';
 
 const LineGraph = () => {
     const { casesData, recoveredData, deathsData } = useContext(AppContext);
-
     const options = {
         legend: {
             display: true,
+            boxWidth: 10,
         },
         elements: {
             point: {
@@ -20,7 +20,7 @@ const LineGraph = () => {
             mode: 'index',
             intersect: false,
             callbacks: {
-                label: function (tooltipItem, data) {
+                label: function (tooltipItem) {
                     return numeral(tooltipItem.value).format('+0,0');
                 },
             },
@@ -30,7 +30,7 @@ const LineGraph = () => {
                 {
                     type: 'time',
                     time: {
-                        format: 'MM/DD/YY',
+                        parser: 'MM/DD/YY',
                         tooltipFormat: 'll',
                     },
                 },
@@ -41,8 +41,7 @@ const LineGraph = () => {
                         display: false,
                     },
                     ticks: {
-                        // Include a dollar sign in the ticks
-                        callback: function (value, index, values) {
+                        callback: function (value) {
                             return numeral(value).format('0a');
                         },
                     },
@@ -52,7 +51,7 @@ const LineGraph = () => {
     };
 
     return (
-        <div>
+        <div className='graph'>
             <Line
                 data={{
                     datasets: [
@@ -80,6 +79,8 @@ const LineGraph = () => {
                     ],
                 }}
                 options={options}
+                height={null}
+                width={null}
             />
         </div>
     );

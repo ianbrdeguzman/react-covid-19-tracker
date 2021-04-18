@@ -1,40 +1,22 @@
 import React, { createContext, useEffect, useReducer } from 'react';
 import axios from 'axios';
+import reducer from './reducer';
 
 const AppContext = createContext();
 
 const defaultState = {
     countries: [],
     country: 'all',
+    countryName: '',
     countryInfo: {},
     tableData: [],
     casesData: [],
     recoveredData: [],
     deathsData: [],
-};
-
-const reducer = (state, action) => {
-    switch (action.type) {
-        case 'SET_COUNTRIES':
-            return { ...state, countries: action.payload };
-        case 'SET_COUNTRY_INFO':
-            return {
-                ...state,
-                countryInfo: action.payload.info,
-                country: action.payload.code,
-            };
-        case 'SET_TABLE_DATA':
-            return { ...state, tableData: action.payload };
-        case 'SET_CHART_DATA':
-            return {
-                ...state,
-                casesData: action.payload.casesData,
-                recoveredData: action.payload.recoveredData,
-                deathsData: action.payload.deathsData,
-            };
-        default:
-            throw new Error('No action type found');
-    }
+    mapCenter: [25.799891, -41.949865],
+    mapZoom: 3,
+    mapCountries: [],
+    type: 'cases',
 };
 
 const AppProvider = ({ children }) => {
@@ -48,13 +30,41 @@ const AppProvider = ({ children }) => {
 
         const historicalURL =
             countryCode === 'all'
-                ? 'https://disease.sh/v3/covid-19/historical/all?lastdays=90'
-                : `https://disease.sh/v3/covid-19/historical/${countryCode}?lastdays=90 `;
+                ? 'https://disease.sh/v3/covid-19/historical/all?lastdays=120'
+                : `https://disease.sh/v3/covid-19/historical/${countryCode}?lastdays=120 `;
 
         fetchCountryInfo(url, countryCode);
-        fetchChartData(historicalURL);
+        fetchChartData(historicalURL, countryCode);
+
+        if (countryCode !== 'all') {
+            fetchMapData(url);
+        } else {
+            dispatch({
+                type: 'SET_MAP_CENTER',
+                payload: {
+                    center: [0, 0],
+                    zoom: 3,
+                },
+            });
+        }
     };
 
+    const onInfoBoxClick = (type) => {
+        dispatch({ type: 'SET_TYPE', payload: type });
+    };
+
+    const fetchMapData = async (url) => {
+        const response = await axios.get(url);
+        const data = response.data;
+        const { countryInfo } = data;
+        dispatch({
+            type: 'SET_MAP_CENTER',
+            payload: {
+                center: [countryInfo.lat, countryInfo.long],
+                zoom: 5,
+            },
+        });
+    };
     const fetchCountryInfo = async (url, countryCode) => {
         const newURL = url || 'https://disease.sh/v3/covid-19/all';
         const newCode = countryCode || 'all';
@@ -62,6 +72,7 @@ const AppProvider = ({ children }) => {
         dispatch({
             type: 'SET_COUNTRY_INFO',
             payload: {
+                name: response.data.country,
                 info: response.data,
                 code: newCode,
             },
@@ -116,21 +127,53 @@ const AppProvider = ({ children }) => {
         };
     };
 
-    const fetchChartData = async (url) => {
-        const newURL =
-            url || 'https://disease.sh/v3/covid-19/historical/all?lastdays=90 ';
-        const response = await axios.get(newURL);
-        const { casesData, recoveredData, deathsData } = createChartData(
-            response.data
-        );
-        dispatch({
-            type: 'SET_CHART_DATA',
-            payload: {
-                casesData,
-                recoveredData,
-                deathsData,
-            },
-        });
+    const fetchChartData = async (url, code) => {
+        let newURL = '';
+        if (code === 'all') {
+            newURL =
+                'https://disease.sh/v3/covid-19/historical/all?lastdays=120';
+            const response = await axios.get(newURL);
+            const { casesData, recoveredData, deathsData } = createChartData(
+                response.data
+            );
+            dispatch({
+                type: 'SET_CHART_DATA',
+                payload: {
+                    casesData,
+                    recoveredData,
+                    deathsData,
+                },
+            });
+        } else if (code === undefined) {
+            const newUrl =
+                url ||
+                'https://disease.sh/v3/covid-19/historical/all?lastdays=120';
+            const response = await axios.get(newUrl);
+            const { casesData, recoveredData, deathsData } = createChartData(
+                response.data
+            );
+            dispatch({
+                type: 'SET_CHART_DATA',
+                payload: {
+                    casesData,
+                    recoveredData,
+                    deathsData,
+                },
+            });
+        } else if (code !== 'all') {
+            const response = await axios.get(url);
+            const { casesData, recoveredData, deathsData } = createChartData(
+                response.data.timeline
+            );
+            dispatch({
+                type: 'SET_CHART_DATA',
+                payload: {
+                    casesData,
+                    recoveredData,
+                    deathsData,
+                },
+            });
+        }
     };
 
     const sortData = (data) => {
@@ -152,6 +195,7 @@ const AppProvider = ({ children }) => {
         const sortedData = sortData(data);
         dispatch({ type: 'SET_COUNTRIES', payload: listOfCountries });
         dispatch({ type: 'SET_TABLE_DATA', payload: sortedData });
+        dispatch({ type: 'SET_MAP_COUNTRIES', payload: response.data });
     };
 
     useEffect(() => {
@@ -161,7 +205,9 @@ const AppProvider = ({ children }) => {
     }, []);
 
     return (
-        <AppContext.Provider value={{ ...state, onCountryChange }}>
+        <AppContext.Provider
+            value={{ ...state, onCountryChange, onInfoBoxClick }}
+        >
             {children}
         </AppContext.Provider>
     );

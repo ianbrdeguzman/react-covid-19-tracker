@@ -4,7 +4,6 @@ import { AppContext } from './context';
 
 const Header = () => {
     const { countries, country, onCountryChange } = useContext(AppContext);
-
     return (
         <header className='app__header'>
             <h1>COVID-19 TRACKER</h1>
