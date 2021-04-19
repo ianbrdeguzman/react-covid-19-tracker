@@ -5,6 +5,7 @@ import { AppContext } from './context';
 
 const InfoBox = ({ title, cases, total, active, isRed, isGrey }) => {
     const { onInfoBoxClick } = useContext(AppContext);
+
     return (
         <Card
             className={`infoBox ${active && 'infoBox--selected'} ${

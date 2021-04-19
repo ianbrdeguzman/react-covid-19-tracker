@@ -1,10 +1,18 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
+import Loading from './Loading';
 import { MapContainer, TileLayer, Circle, Popup, useMap } from 'react-leaflet';
 import { AppContext } from './context';
 import numeral from 'numeral';
 
 const Map = () => {
-    const { mapCenter, mapZoom, mapCountries, type } = useContext(AppContext);
+    const {
+        mapCenter,
+        mapZoom,
+        mapCountries,
+        type,
+        fetchCountriesList,
+        isLoading,
+    } = useContext(AppContext);
 
     const ChangeView = () => {
         const map = useMap();
@@ -14,7 +22,7 @@ const Map = () => {
 
     const casesType = {
         cases: {
-            hex: '#CC1034',
+            hex: '#EC7063',
             multiplier: 300,
         },
         recovered: {
@@ -27,6 +35,17 @@ const Map = () => {
         },
     };
 
+    useEffect(() => {
+        fetchCountriesList();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <section className='map'>
+                <Loading />
+            </section>
+        );
+    }
     return (
         <section className='map'>
             <MapContainer

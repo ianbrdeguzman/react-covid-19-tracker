@@ -1,17 +1,19 @@
 import React, { useContext } from 'react';
-import { Card, CardContent } from '@material-ui/core';
+import { Card, CardContent, Typography } from '@material-ui/core';
 import Table from './Table';
 import LineGraph from './LineGraph';
 import { AppContext } from './context';
 
 const Aside = () => {
-    const { countryName } = useContext(AppContext);
+    const { countryName, type } = useContext(AppContext);
     return (
-        <Card className='app__right'>
+        <Card className='app__aside'>
             <CardContent>
-                <h3>Live Cases by Country</h3>
+                <Typography variant='h6'>Highest {type} by country</Typography>
                 <Table />
-                <h3>{countryName || 'Worldwide'} Daily Statistics</h3>
+                <Typography variant='h6'>
+                    {countryName || 'Worldwide'} daily {type}
+                </Typography>
                 <LineGraph />
             </CardContent>
         </Card>

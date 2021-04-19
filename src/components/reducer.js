@@ -17,9 +17,7 @@ const reducer = (state, action) => {
         case 'SET_CHART_DATA':
             return {
                 ...state,
-                casesData: action.payload.casesData,
-                recoveredData: action.payload.recoveredData,
-                deathsData: action.payload.deathsData,
+                chartData: action.payload,
             };
         case 'SET_MAP_CENTER':
             return {
@@ -37,6 +35,10 @@ const reducer = (state, action) => {
                 ...state,
                 type: action.payload,
             };
+        case 'SET_LOADING_ON':
+            return { ...state, isLoading: true };
+        case 'SET_LOADING_OFF':
+            return { ...state, isLoading: false };
         default:
             throw new Error('No action type found');
     }

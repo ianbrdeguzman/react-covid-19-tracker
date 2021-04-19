@@ -1,14 +1,14 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { AppContext } from './context';
 import { Line } from '@reactchartjs/react-chart.js';
 import numeral from 'numeral';
 
 const LineGraph = () => {
-    const { casesData, recoveredData, deathsData } = useContext(AppContext);
+    const { chartData, fetchChartData, type, country } = useContext(AppContext);
+
     const options = {
         legend: {
-            display: true,
-            boxWidth: 10,
+            display: false,
         },
         elements: {
             point: {
@@ -50,31 +50,39 @@ const LineGraph = () => {
         },
     };
 
+    const color = () => {
+        if (type === 'cases') {
+            return '#EC7063';
+        } else if (type === 'recovered') {
+            return '#7dd71d';
+        } else {
+            return '#808B96';
+        }
+    };
+
+    const bgColor = () => {
+        if (type === 'cases') {
+            return 'rgba(236, 112, 99, 0.2)';
+        } else if (type === 'recovered') {
+            return 'rgba(125, 215, 29,0.2)';
+        } else {
+            return 'rgba(128, 139, 150, 0.2)';
+        }
+    };
+
+    useEffect(() => {
+        fetchChartData(country);
+    }, [country, type]);
+
     return (
         <div className='graph'>
             <Line
                 data={{
                     datasets: [
                         {
-                            label: 'Cases',
-                            backgroundColor: '#EC7063',
-                            borderColor: '#EC7063',
-                            fill: false,
-                            data: casesData,
-                        },
-                        {
-                            label: 'Recovered',
-                            backgroundColor: '#52BE80',
-                            borderColor: '#52BE80',
-                            fill: false,
-                            data: recoveredData,
-                        },
-                        {
-                            label: 'Deaths',
-                            backgroundColor: '#CACFD2',
-                            borderColor: '#CACFD2',
-                            fill: false,
-                            data: deathsData,
+                            backgroundColor: bgColor(),
+                            borderColor: color(),
+                            data: chartData,
                         },
                     ],
                 }}

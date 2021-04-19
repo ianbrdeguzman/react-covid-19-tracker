@@ -1,10 +1,10 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { AppContext } from './context';
 import InfoBox from './InfoBox';
 import numeral from 'numeral';
 
 const Stats = () => {
-    const { countryInfo, type } = useContext(AppContext);
+    const { countryInfo, type, fetchCountryInfo } = useContext(AppContext);
     const {
         todayCases,
         todayRecovered,
@@ -13,6 +13,11 @@ const Stats = () => {
         recovered,
         deaths,
     } = countryInfo;
+
+    useEffect(() => {
+        fetchCountryInfo();
+    }, []);
+
     return (
         <section className='app__stats'>
             <InfoBox

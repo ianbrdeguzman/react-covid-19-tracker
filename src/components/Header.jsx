@@ -1,12 +1,23 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { FormControl, Select, MenuItem } from '@material-ui/core';
 import { AppContext } from './context';
+import { Typography } from '@material-ui/core';
 
 const Header = () => {
-    const { countries, country, onCountryChange } = useContext(AppContext);
+    const {
+        countries,
+        country,
+        onCountryChange,
+        fetchCountriesList,
+    } = useContext(AppContext);
+
+    useEffect(() => {
+        fetchCountriesList();
+    }, []);
+
     return (
         <header className='app__header'>
-            <h1>COVID-19 TRACKER</h1>
+            <Typography variant='h2'>COVID-19 TRACKER</Typography>
             <FormControl variant='outlined'>
                 <Select
                     onChange={(e) => onCountryChange(e.target.value)}

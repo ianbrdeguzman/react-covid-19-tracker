@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useReducer } from 'react';
+import React, { createContext, useReducer } from 'react';
 import axios from 'axios';
 import reducer from './reducer';
 
@@ -10,13 +10,12 @@ const defaultState = {
     countryName: '',
     countryInfo: {},
     tableData: [],
-    casesData: [],
-    recoveredData: [],
-    deathsData: [],
+    chartData: [],
     mapCenter: [25.799891, -41.949865],
     mapZoom: 3,
     mapCountries: [],
     type: 'cases',
+    isLoading: true,
 };
 
 const AppProvider = ({ children }) => {
@@ -28,25 +27,19 @@ const AppProvider = ({ children }) => {
                 ? 'https://disease.sh/v3/covid-19/all'
                 : `https://disease.sh/v3/covid-19/countries/${countryCode}?strict=true`;
 
-        const historicalURL =
-            countryCode === 'all'
-                ? 'https://disease.sh/v3/covid-19/historical/all?lastdays=120'
-                : `https://disease.sh/v3/covid-19/historical/${countryCode}?lastdays=120 `;
-
-        fetchCountryInfo(url, countryCode);
-        fetchChartData(historicalURL, countryCode);
-
         if (countryCode !== 'all') {
             fetchMapData(url);
         } else {
             dispatch({
                 type: 'SET_MAP_CENTER',
                 payload: {
-                    center: [0, 0],
+                    center: [25.799891, -41.949865],
                     zoom: 3,
                 },
             });
         }
+        fetchCountryInfo(url, countryCode);
+        fetchChartData(countryCode);
     };
 
     const onInfoBoxClick = (type) => {
@@ -79,100 +72,35 @@ const AppProvider = ({ children }) => {
         });
     };
 
-    const createChartData = (data) => {
-        const casesData = [];
-        const recoveredData = [];
-        const deathsData = [];
-        let lastCasesData, lastRecoveredData, lastDeathsData;
-        for (let type in data) {
-            if (type === 'cases') {
-                for (let date in data[type]) {
-                    if (lastCasesData) {
-                        const newCasesData = {
-                            x: date,
-                            y: data[type][date] - lastCasesData,
-                        };
-                        casesData.push(newCasesData);
-                    }
-                    lastCasesData = data[type][date];
-                }
-            } else if (type === 'recovered') {
-                for (let date in data[type]) {
-                    if (lastRecoveredData) {
-                        const newRecoveredData = {
-                            x: date,
-                            y: data[type][date] - lastRecoveredData,
-                        };
-                        recoveredData.push(newRecoveredData);
-                    }
-                    lastRecoveredData = data[type][date];
-                }
-            } else {
-                for (let date in data[type]) {
-                    if (lastDeathsData) {
-                        const newDeathsData = {
-                            x: date,
-                            y: data[type][date] - lastDeathsData,
-                        };
-                        deathsData.push(newDeathsData);
-                    }
-                    lastDeathsData = data[type][date];
-                }
+    const createChartData = (data, type) => {
+        const chartData = [];
+        let lastDataPoint;
+        for (let date in data.cases) {
+            if (lastDataPoint) {
+                let newDataPoint = {
+                    x: date,
+                    y: data[type][date] - lastDataPoint,
+                };
+                chartData.push(newDataPoint);
             }
+            lastDataPoint = data[type][date];
         }
-        return {
-            casesData,
-            recoveredData,
-            deathsData,
-        };
+        return chartData;
     };
 
-    const fetchChartData = async (url, code) => {
-        let newURL = '';
-        if (code === 'all') {
-            newURL =
-                'https://disease.sh/v3/covid-19/historical/all?lastdays=120';
-            const response = await axios.get(newURL);
-            const { casesData, recoveredData, deathsData } = createChartData(
-                response.data
-            );
-            dispatch({
-                type: 'SET_CHART_DATA',
-                payload: {
-                    casesData,
-                    recoveredData,
-                    deathsData,
-                },
-            });
-        } else if (code === undefined) {
-            const newUrl =
-                url ||
-                'https://disease.sh/v3/covid-19/historical/all?lastdays=120';
-            const response = await axios.get(newUrl);
-            const { casesData, recoveredData, deathsData } = createChartData(
-                response.data
-            );
-            dispatch({
-                type: 'SET_CHART_DATA',
-                payload: {
-                    casesData,
-                    recoveredData,
-                    deathsData,
-                },
-            });
-        } else if (code !== 'all') {
-            const response = await axios.get(url);
-            const { casesData, recoveredData, deathsData } = createChartData(
-                response.data.timeline
-            );
-            dispatch({
-                type: 'SET_CHART_DATA',
-                payload: {
-                    casesData,
-                    recoveredData,
-                    deathsData,
-                },
-            });
+    const fetchChartData = async (countryCode) => {
+        const url =
+            countryCode === 'all'
+                ? 'https://disease.sh/v3/covid-19/historical/all?lastdays=120'
+                : `https://disease.sh/v3/covid-19/historical/${countryCode}?lastdays=120 `;
+        const response = await axios.get(url);
+        const data = response.data;
+        if (countryCode !== 'all') {
+            const chartData = createChartData(data.timeline, state.type);
+            dispatch({ type: 'SET_CHART_DATA', payload: chartData });
+        } else {
+            const chartData = createChartData(data, state.type);
+            dispatch({ type: 'SET_CHART_DATA', payload: chartData });
         }
     };
 
@@ -181,7 +109,8 @@ const AppProvider = ({ children }) => {
         return sortedData.sort((a, b) => (a.cases > b.cases ? -1 : 1));
     };
 
-    const fetchCountries = async () => {
+    const fetchCountriesList = async () => {
+        dispatch({ type: 'SET_LOADING_ON' });
         const response = await axios.get(
             'https://disease.sh/v3/covid-19/countries'
         );
@@ -196,17 +125,19 @@ const AppProvider = ({ children }) => {
         dispatch({ type: 'SET_COUNTRIES', payload: listOfCountries });
         dispatch({ type: 'SET_TABLE_DATA', payload: sortedData });
         dispatch({ type: 'SET_MAP_COUNTRIES', payload: response.data });
+        dispatch({ type: 'SET_LOADING_OFF' });
     };
-
-    useEffect(() => {
-        fetchCountries();
-        fetchCountryInfo();
-        fetchChartData();
-    }, []);
 
     return (
         <AppContext.Provider
-            value={{ ...state, onCountryChange, onInfoBoxClick }}
+            value={{
+                ...state,
+                onCountryChange,
+                onInfoBoxClick,
+                fetchCountriesList,
+                fetchCountryInfo,
+                fetchChartData,
+            }}
         >
             {children}
         </AppContext.Provider>
