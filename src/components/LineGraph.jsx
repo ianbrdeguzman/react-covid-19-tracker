@@ -2,9 +2,21 @@ import React, { useContext, useEffect } from 'react';
 import { AppContext } from './context';
 import { Line } from '@reactchartjs/react-chart.js';
 import numeral from 'numeral';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme) => ({
+    app__graph: {
+        '& canvas': {
+            height: '185px',
+            marginTop: theme.spacing(2),
+        },
+    },
+}));
 
 const LineGraph = () => {
     const { chartData, fetchChartData, type, country } = useContext(AppContext);
+
+    const classes = useStyles();
 
     const options = {
         legend: {
@@ -75,7 +87,7 @@ const LineGraph = () => {
     }, [country, type]);
 
     return (
-        <div className='graph'>
+        <div className={classes.app__graph}>
             <Line
                 data={{
                     datasets: [

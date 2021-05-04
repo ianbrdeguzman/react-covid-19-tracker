@@ -1,13 +1,26 @@
 import React, { useContext } from 'react';
+import { AppContext } from './context';
 import { Card, CardContent, Typography } from '@material-ui/core';
 import Table from './Table';
 import LineGraph from './LineGraph';
-import { AppContext } from './context';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme) => ({
+    app__aside: {
+        margin: '2rem 0',
+        [theme.breakpoints.up('lg')]: {
+            maxWidth: '400px',
+        },
+    },
+}));
 
 const Aside = () => {
     const { countryName, type } = useContext(AppContext);
+
+    const classes = useStyles();
+
     return (
-        <Card className='app__aside'>
+        <Card className={classes.app__aside}>
             <CardContent>
                 <Typography variant='h6'>Highest {type} by country</Typography>
                 <Table />

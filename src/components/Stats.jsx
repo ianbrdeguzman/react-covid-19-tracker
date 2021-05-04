@@ -2,6 +2,14 @@ import React, { useContext, useEffect } from 'react';
 import { AppContext } from './context';
 import InfoBox from './InfoBox';
 import numeral from 'numeral';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles(() => ({
+    app__stats: {
+        display: 'flex',
+        justifyContent: 'space-between',
+    },
+}));
 
 const Stats = () => {
     const { countryInfo, type, fetchCountryInfo } = useContext(AppContext);
@@ -14,12 +22,14 @@ const Stats = () => {
         deaths,
     } = countryInfo;
 
+    const classes = useStyles();
+
     useEffect(() => {
         fetchCountryInfo();
     }, []);
 
     return (
-        <section className='app__stats'>
+        <section className={classes.app__stats}>
             <InfoBox
                 isRed
                 active={type === 'cases'}

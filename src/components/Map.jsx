@@ -1,8 +1,50 @@
 import React, { useContext, useEffect } from 'react';
+import { AppContext } from './context';
 import Loading from './Loading';
 import { MapContainer, TileLayer, Circle, Popup, useMap } from 'react-leaflet';
-import { AppContext } from './context';
 import numeral from 'numeral';
+import { makeStyles } from '@material-ui/core/styles';
+
+const useStyles = makeStyles((theme) => ({
+    app__map: {
+        height: '516px',
+        marginTop: theme.spacing(2),
+        border: '0.5rem solid #ffffff',
+        borderRadius: '4px',
+        boxShadow: `0px 2px 1px -1px rgb(0 0 0 / 20%),
+        0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)`,
+        overflow: 'hidden',
+        position: 'relative',
+        '& .leaflet-container': {
+            height: '100%',
+        },
+    },
+    app__map__info__container: {
+        width: '150px',
+    },
+    app__map__info__flag: {
+        height: '80px',
+        width: '100%',
+        backgroundSize: '100% 100%',
+        marginBottom: theme.spacing(1),
+        boxShadow: `0px 2px 1px -1px rgb(0 0 0 / 20%),
+        0px 1px 1px 0px rgb(0 0 0 / 14%), 0px 1px 3px 0px rgb(0 0 0 / 12%)`,
+        '& img': {
+            width: '100%',
+            height: '100%',
+        },
+    },
+    app__map__info__name: {
+        fontSize: '20px',
+        fontWeight: 'bold',
+        color: theme.palette.grey[800],
+    },
+    app__map__info__cases: {
+        fontSize: '14px',
+        marginTop: theme.spacing(1),
+        color: theme.palette.grey[600],
+    },
+}));
 
 const Map = () => {
     const {
@@ -13,6 +55,8 @@ const Map = () => {
         fetchCountriesList,
         isLoading,
     } = useContext(AppContext);
+
+    const classes = useStyles();
 
     const ChangeView = () => {
         const map = useMap();
@@ -47,7 +91,7 @@ const Map = () => {
         );
     }
     return (
-        <section className='map'>
+        <section className={classes.app__map}>
             <MapContainer
                 center={mapCenter}
                 zoom={mapZoom}
@@ -77,27 +121,45 @@ const Map = () => {
                             }
                         >
                             <Popup>
-                                <div className='info-container'>
+                                <div
+                                    className={
+                                        classes.app__map__info__container
+                                    }
+                                >
                                     <div
-                                        className='info-flag'
+                                        className={classes.app__map__info__flag}
                                         style={{
                                             backgroundImage: `url(${country.countryInfo.flag})`,
                                         }}
                                     ></div>
-                                    <div className='info-name'>
+                                    <div
+                                        className={classes.app__map__info__name}
+                                    >
                                         {country.country}
                                     </div>
-                                    <div className='info-confirmed'>
+                                    <div
+                                        className={
+                                            classes.app__map__info__cases
+                                        }
+                                    >
                                         Cases:{' '}
                                         {numeral(country.cases).format('0,0')}
                                     </div>
-                                    <div className='info-recovered'>
+                                    <div
+                                        className={
+                                            classes.app__map__info__cases
+                                        }
+                                    >
                                         Recovered:{' '}
                                         {numeral(country.recovered).format(
                                             '0,0'
                                         )}
                                     </div>
-                                    <div className='info-deaths'>
+                                    <div
+                                        className={
+                                            classes.app__map__info__cases
+                                        }
+                                    >
                                         Deaths:{' '}
                                         {numeral(country.deaths).format('0,0')}
                                     </div>

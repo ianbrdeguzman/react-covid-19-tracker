@@ -104,7 +104,7 @@ const AppProvider = ({ children }) => {
         }
     };
 
-    const sortData = (data) => {
+    const sortDataDescending = (data) => {
         const sortedData = [...data];
         return sortedData.sort((a, b) => (a.cases > b.cases ? -1 : 1));
     };
@@ -121,7 +121,7 @@ const AppProvider = ({ children }) => {
                 value: country.countryInfo.iso3,
             };
         });
-        const sortedData = sortData(data);
+        const sortedData = sortDataDescending(data);
         dispatch({ type: 'SET_COUNTRIES', payload: listOfCountries });
         dispatch({ type: 'SET_TABLE_DATA', payload: sortedData });
         dispatch({ type: 'SET_MAP_COUNTRIES', payload: response.data });
